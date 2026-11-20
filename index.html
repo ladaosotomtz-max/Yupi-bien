@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YupiFest's | Decoración y Organización de Eventos Exclusivos</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .bg-navy { background-color: #050C1A; }
+        .bg-navy-light { background-color: #0A1628; }
+        .bg-navy-card { background-color: rgba(10, 22, 40, 0.9); }
+       
+        .text-gold { color: #C5A059; }
+        .border-gold { border-color: #C5A059; }
+        .bg-gold { background-color: #C5A059; }
+       
+        .gold-gradient {
+            background: linear-gradient(135deg, #9A7432 0%, #C5A059 25%, #FDF0A6 50%, #C5A059 75%, #8A6321 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+       
+        .btn-gold {
+            background: linear-gradient(135deg, #B88E3D 0%, #F5E08A 50%, #8A6321 100%);
+            color: #050C1A;
+            transition: all 0.3s ease;
+        }
+        .btn-gold:hover {
+            opacity: 0.95;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(197, 160, 89, 0.4);
+        }
+       
+        .glass-card {
+            background: rgba(10, 22, 40, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(197, 160, 89, 0.25);
+        }
+
+        .image-overlay {
+            background: linear-gradient(to top, rgba(5, 12, 26, 0.95) 0%, rgba(5, 12, 26, 0.4) 60%, transparent 100%);
+        }
+
+        .accordion-content {
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+        }
+
+        .accordion-content.active {
+            max-height: 300px;
+            opacity: 1;
+        }
+
+        /* Drag & Drop Moodboard */
+        .draggable-item {
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+        }
+        .draggable-item:active {
+            cursor: grabbing;
+        }
+        .dropzone {
+            min-height: 320px;
+            background-image: radial-gradient(rgba(197, 160, 89, 0.15) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        pre::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        pre::-webkit-scrollbar-thumb {
+            background: rgba(197, 160, 89, 0.4);
+            border-radius: 4px;
+        }
+        pre::-webkit-scrollbar-track {
+            background: #050C1A;
+        }
+    </style>
+</head>
+<body class="bg-navy text-gray-200 font-sans antialiased selection:bg-gold selection:text-navy">
+
+    <!-- Modal de Autenticación (Login / Registro) -->
+    <div id="modal-auth" class="fixed inset-0 z-[120] hidden flex items-center justify-center p-4 bg-navy/90 backdrop-blur-md">
+        <div class="glass-card max-w-md w-full p-8 rounded-3xl border-2 border-gold relative shadow-2xl">
+            <button onclick="cerrarAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gold text-xl focus:outline-none">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 bg-navy rounded-full border border-gold flex items-center justify-center mx-auto mb-3 shadow-lg">
+                    <i class="fas fa-user-lock text-gold text-2xl"></i>
+                </div>
+                <h3 class="text-2xl font-extrabold text-white gold-gradient" id="auth-title">Iniciar Sesión</h3>
+                <p class="text-xs text-gray-300 mt-1" id="auth-subtitle">Accede a tu cuenta o regístrate para cotizar tus eventos</p>
+            </div>
+
+            <!-- Tab Switcher -->
+            <div class="flex bg-navy border border-gold/30 rounded-xl p-1 mb-6">
+                <button id="tab-login" onclick="switchAuthTab('login')" class="w-1/2 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition bg-gold text-navy shadow">
+                    Iniciar Sesión
+                </button>
+                <button id="tab-register" onclick="switchAuthTab('register')" class="w-1/2 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition text-gray-400 hover:text-gold">
+                    Crear Cuenta
+                </button>
+            </div>
+
+            <!-- Mensajes de Notificación -->
+            <div id="auth-msg" class="hidden mb-4 p-3 rounded-xl text-xs font-semibold text-center"></div>
+
+            <!-- Formulario de LOGIN -->
+            <form id="form-login" onsubmit="procesarLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Correo Electrónico</label>
+                    <div class="relative">
+                        <i class="fas fa-envelope text-gold/60 absolute left-3.5 top-3.5 text-sm"></i>
+                        <input type="email" id="login-email" name="email" required placeholder="correo@ejemplo.com" class="w-full bg-navy border border-gold/30 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-gold">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Contraseña</label>
+                    <div class="relative">
+                        <i class="fas fa-lock text-gold/60 absolute left-3.5 top-3.5 text-sm"></i>
+                        <input type="password" id="login-password" name="password" required placeholder="••••••••" class="w-full bg-navy border border-gold/30 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-gold">
+                    </div>
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                    <label class="flex items-center text-gray-400 cursor-pointer">
+                        <input type="checkbox" class="accent-gold mr-2 rounded"> Recordarme
+                    </label>
+                    <a href="#" onclick="mostrarNotificacionToast('Enlace de recuperación enviado a tu correo.'); return false;" class="text-gold hover:underline">¿Olvidaste tu contraseña?</a>
+                </div>
+                <button type="submit" class="w-full btn-gold font-bold py-3 rounded-xl text-sm shadow-lg uppercase tracking-wide">
+                    Entrar a Mi Cuenta
+                </button>
+            </form>
+
+            <!-- Formulario de REGISTRO -->
+            <form id="form-register" onsubmit="procesarRegistro(event)" class="space-y-3 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Nombre Completo</label>
+                    <div class="relative">
+                        <i class="fas fa-user text-gold/60 absolute left-3.5 top-3 text-sm"></i>
+                        <input type="text" id="reg-nombre" name="nombre" required placeholder="Ej. Ana María López" class="w-full bg-navy border border-gold/30 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-gold">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Correo Electrónico</label>
+                    <div class="relative">
+                        <i class="fas fa-envelope text-gold/60 absolute left-3.5 top-3 text-sm"></i>
+                        <input type="email" id="reg-email" name="email" required placeholder="correo@ejemplo.com" class="w-full bg-navy border border-gold/30 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-gold">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Contraseña</label>
+                        <input type="password" id="reg-password" name="password" required placeholder="••••••••" class="w-full bg-navy border border-gold/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-gold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Confirmar</label>
+                        <input type="password" id="reg-confirm" required placeholder="••••••••" class="w-full bg-navy border border-gold/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-gold">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Sede Preferida</label>
+                    <select id="reg-sede" class="w-full bg-navy border border-gold/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-gold">
+                        <option value="Agua Prieta, Sonora">Agua Prieta, Sonora</option>
+                        <option value="Hermosillo, Sonora">Hermosillo, Sonora</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full btn-gold font-bold py-3 rounded-xl text-sm shadow-lg uppercase tracking-wide mt-2">
+                    Crear Cuenta Ahora
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pop-up de Descuento Especial -->
+    <div id="popup-descuento" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-navy/80 backdrop-blur-md">
+        <div class="glass-card max-w-lg w-full p-8 rounded-3xl border-2 border-gold relative text-center shadow-2xl">
+            <button onclick="cerrarPopup()" class="absolute top-4 right-4 text-gray-400 hover:text-gold text-xl focus:outline-none">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="w-16 h-16 bg-navy rounded-full border border-gold flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <i class="fas fa-gift text-gold text-2xl"></i>
+            </div>
+            <span class="text-gold uppercase tracking-widest text-xs font-bold">Regalo Exclusivo para Usuarios</span>
+            <h3 class="text-2xl md:text-3xl font-extrabold text-white mt-1 mb-2">¡Obtén un 10% DE DESCUENTO!</h3>
+            <p class="text-gray-300 text-sm mb-6 leading-relaxed">
+                Gracias por haber iniciado sesión. Ingresa tu correo electrónico y recibe tu cupón exclusivo para tu próximo evento.
+            </p>
+            <form onsubmit="procesarDescuento(event)" class="space-y-4">
+                <input type="email" id="email-descuento" required placeholder="Ingresa tu correo electrónico" class="w-full bg-navy border border-gold/40 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-gold">
+                <button type="submit" class="w-full btn-gold font-bold py-3.5 rounded-xl text-base shadow-lg uppercase tracking-wide">
+                    Reclamar Mi Descuento
+                </button>
+            </form>
+            <p class="text-xs text-gray-400 mt-4">*Válido para eventos en Agua Prieta y Hermosillo, Sonora.</p>
+        </div>
+    </div>
+
+    <!-- Navegación Principal -->
+    <nav class="sticky top-0 z-50 glass-card border-b border-gold/20 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+            <a href="#inicio" class="text-2xl md:text-3xl font-bold tracking-wider gold-gradient">YupiFest's</a>
+            
+            <div class="hidden lg:flex space-x-5 text-xs xl:text-sm font-medium">
+                <a href="#inicio" class="hover:text-gold transition duration-200">Inicio</a>
+                <a href="#que-somos" class="hover:text-gold transition duration-200">¿Qué somos?</a>
+                <a href="#servicios" class="hover:text-gold transition duration-200">Servicios</a>
+                <a href="#salones" class="hover:text-gold transition duration-200">Salones</a>
+                <a href="#calculadora" class="hover:text-gold transition duration-200">Calculadora</a>
+                <a href="#moodboard" class="hover:text-gold transition duration-200">Diseñador</a>
+                <a href="#proceso" class="hover:text-gold transition duration-200">Proceso</a>
+                <a href="#galeria" class="hover:text-gold transition duration-200">Galería</a>
+                <a href="#contacto" class="hover:text-gold transition duration-200">Contacto</a>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <div id="nav-user-area">
+                    <button onclick="abrirAuthModal('login')" class="btn-gold font-bold px-4 py-2 rounded-full text-xs sm:text-sm shadow-lg tracking-wide flex items-center space-x-2">
+                        <i class="fas fa-user-circle text-base"></i>
+                        <span>Iniciar Sesión / Registro</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="relative min-h-[90vh] flex items-center justify-center text-center px-6 overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1920&q=80" alt="Decoración de Eventos Exclusivos" class="w-full h-full object-cover object-center filter brightness-40">
+            <div class="absolute inset-0 bg-gradient-to-b from-navy/70 via-navy/50 to-navy"></div>
+        </div>
+
+        <div class="relative z-10 max-w-5xl mx-auto space-y-6 my-12">
+            <div class="inline-block border border-gold/50 px-5 py-2 rounded-full bg-navy/80 backdrop-blur-md mb-2 shadow-lg">
+                <p class="text-gold tracking-widest uppercase text-xs font-bold">Decoración & Organización de Eventos Exclusivos</p>
+            </div>
+            <h1 class="text-4xl sm:text-6xl md:text-7xl font-extrabold text-white leading-tight drop-shadow-md">
+                Elegancia y Magia en Cada Detalle
+            </h1>
+            <p class="text-xl md:text-3xl italic font-light text-gray-200 max-w-3xl mx-auto drop-shadow">
+                "Hacemos de tus fiestas momentos inolvidables"
+            </p>
+            <p class="text-gray-300 text-sm md:text-base max-w-2xl mx-auto font-light">
+                Transformamos salones y espacios en escenarios majestuosos diseñados a tu medida en Agua Prieta y Hermosillo, Sonora.
+            </p>
+            <div class="pt-6 flex flex-col sm:flex-row justify-center gap-4">
+                <a href="#salones" class="btn-gold font-bold px-8 py-3.5 rounded-full text-lg shadow-xl inline-block">
+                    Ver Salones Principal & VIP
+                </a>
+                <a href="#contacto" class="border border-gold text-gold hover:bg-gold hover:text-navy transition font-bold px-8 py-3.5 rounded-full text-lg shadow-xl inline-block backdrop-blur-sm bg-navy/30">
+                    Agendar Cita
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ¿Qué somos? (Misión, Visión y Valores) -->
+    <section id="que-somos" class="py-24 px-6 bg-navy-light/40">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <p class="text-gold uppercase tracking-widest text-xs font-bold mb-2">Nuestra Esencia</p>
+                <h2 class="text-3xl sm:text-4xl font-bold text-white mb-3">¿Qué somos?</h2>
+                <div class="w-20 h-1 bg-gold mx-auto rounded-full"></div>
+            </div>
+           
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div class="glass-card p-8 md:p-10 rounded-2xl border border-gold/30 hover:border-gold transition duration-300 shadow-xl">
+                    <div class="flex items-center space-x-4 mb-6">
+                        <div class="w-14 h-14 rounded-full bg-navy flex items-center justify-center border border-gold shadow-md">
+                            <i class="fas fa-bullseye text-gold text-2xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white">Misión</h3>
+                    </div>
+                    <p class="text-gray-300 leading-relaxed text-base">
+                        Ofrecer experiencias únicas en la organización de eventos inolvidables, combinando elegancia, planificación impecable y un confort absoluto para que nuestros clientes e invitados disfruten de cada celebración al máximo y sin preocupaciones.
+                    </p>
+                </div>
+
+                <div class="glass-card p-8 md:p-10 rounded-2xl border border-gold/30 hover:border-gold transition duration-300 shadow-xl">
+                    <div class="flex items-center space-x-4 mb-6">
+                        <div class="w-14 h-14 rounded-full bg-navy flex items-center justify-center border border-gold shadow-md">
+                            <i class="fas fa-eye text-gold text-2xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white">Visión</h3>
+                    </div>
+                    <p class="text-gray-300 leading-relaxed text-base">
+                        Consolidarnos para el año 2030 como la empresa líder en organización de eventos de la región, destacando por transformar momentos especiales en vivencias sofisticadas, cómodas y genuinamente divertidas.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Valores -->
+            <div class="glass-card p-8 md:p-10 rounded-2xl border border-gold/30 shadow-xl">
+                <div class="flex items-center space-x-4 mb-8 justify-center">
+                    <div class="w-12 h-12 rounded-full bg-navy flex items-center justify-center border border-gold">
+                        <i class="fas fa-star text-gold text-xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white">Nuestros Valores</h3>
+                </div>
+               
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="p-5 rounded-xl bg-navy/80 border border-gold/15 hover:border-gold/40 transition">
+                        <h4 class="text-gold font-bold text-lg mb-2 flex items-center">
+                            <i class="fas fa-check-circle mr-2"></i> Responsabilidad
+                        </h4>
+                        <p class="text-gray-300 text-sm">Garantizar el cumplimiento impecable de cada acuerdo, cronograma y entrega para que el cliente disfrute su evento sin preocupaciones ni sorpresas.</p>
+                    </div>
+
+                    <div class="p-5 rounded-xl bg-navy/80 border border-gold/15 hover:border-gold/40 transition">
+                        <h4 class="text-gold font-bold text-lg mb-2 flex items-center">
+                            <i class="fas fa-handshake mr-2"></i> Honestidad
+                        </h4>
+                        <p class="text-gray-300 text-sm">Ofrecer presupuestos transparentes, costos sin letras chiquitas y una comunicación clara desde la planificación hasta la ejecución.</p>
+                    </div>
+
+                    <div class="p-5 rounded-xl bg-navy/80 border border-gold/15 hover:border-gold/40 transition">
+                        <h4 class="text-gold font-bold text-lg mb-2 flex items-center">
+                            <i class="fas fa-heart mr-2"></i> Compromiso
+                        </h4>
+                        <p class="text-gray-300 text-sm">Asumir cada celebración como propia, entregando el 100% de dedicación en cada etapa de la organización.</p>
+                    </div>
+
+                    <div class="p-5 rounded-xl bg-navy/80 border border-gold/15 hover:border-gold/40 transition">
+                        <h4 class="text-gold font-bold text-lg mb-2 flex items-center">
+                            <i class="fas fa-clock mr-2"></i> Puntualidad
+                        </h4>
+                        <p class="text-gray-300 text-sm">Respetar rigurosamente los tiempos fijados para montajes, logística y coordinación general.</p>
+                    </div>
+
+                    <div class="p-5 rounded-xl bg-navy/80 border border-gold/15 hover:border-gold/40 transition">
+                        <h4 class="text-gold font-bold text-lg mb-2 flex items-center">
+                            <i class="fas fa-shield-alt mr-2"></i> Lealtad y Confianza
+                        </h4>
+                        <p class="text-gray-300 text-sm">Construir relaciones duraderas y seguras con los clientes y proveedores basadas en el respeto mutuo.</p>
+                    </div>
+
+                    <div class="p-5 rounded-xl bg-navy/80 border border-gold/15 hover:border-gold/40 transition">
+                        <h4 class="text-gold font-bold text-lg mb-2 flex items-center">
+                            <i class="fas fa-award mr-2"></i> Ética Profesional
+                        </h4>
+                        <p class="text-gray-300 text-sm">Operar bajo estándares justos, seguros y profesionales en el trato con el personal, clientes y aliados comerciales.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Servicios Integrales -->
+    <section id="servicios" class="py-24 px-6 max-w-7xl mx-auto">
+        <div class="text-center mb-16">
+            <p class="text-gold uppercase tracking-widest text-xs font-bold mb-2">Lo Que Ofrecemos</p>
+            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-3">Nuestros Servicios Integrales</h2>
+            <div class="w-20 h-1 bg-gold mx-auto rounded-full"></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="glass-card rounded-2xl overflow-hidden hover:border-gold transition duration-300 group shadow-xl flex flex-col">
+                <div class="h-52 overflow-hidden relative">
+                    <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=800&q=80" alt="Eventos Sociales" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-navy via-transparent to-transparent"></div>
+                </div>
+                <div class="p-8 text-center flex-1 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3">Eventos Sociales</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Bodas, XV años y aniversarios diseñados con ambientación sofisticada, centros de mesa exclusivos y acabados de lujo.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card rounded-2xl overflow-hidden hover:border-gold transition duration-300 group shadow-xl flex flex-col">
+                <div class="h-52 overflow-hidden relative">
+                    <img src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=800&q=80" alt="Fiestas Temáticas" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-navy via-transparent to-transparent"></div>
+                </div>
+                <div class="p-8 text-center flex-1 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3">Fiestas Temáticas</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Cumpleaños y celebraciones especiales personalizadas para reflejar tu estilo único con elementos creativos e innovadores.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card rounded-2xl overflow-hidden hover:border-gold transition duration-300 group shadow-xl flex flex-col">
+                <div class="h-52 overflow-hidden relative">
+                    <img src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=800&q=80" alt="Eventos Corporativos" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-navy via-transparent to-transparent"></div>
+                </div>
+                <div class="p-8 text-center flex-1 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3">Eventos Corporativos</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Galas, lanzamientos de marca y cenas de empresa con presencia elegante, mobiliario ejecutivo e iluminación impecable.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Salones Principal & VIP -->
+    <section id="salones" class="py-24 px-6 bg-navy-light/60 border-y border-gold/20">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <p class="text-gold uppercase tracking-widest text-xs font-bold mb-2">Instalaciones de Primer Nivel</p>
+                <h2 class="text-3xl sm:text-4xl font-bold text-white mb-3">Salones Principal & VIP</h2>
+                <p class="text-gray-300 max-w-2xl mx-auto text-sm md:text-base">Haz clic en la opción de tu preferencia para desplegar la ubicación en los mapas de <strong>Agua Prieta</strong> y <strong>Hermosillo, Sonora</strong>.</p>
+                <div class="w-20 h-1 bg-gold mx-auto rounded-full mt-4"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Salón Económico -->
+                <div onclick="abrirSedesMapas('Económico')" class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between hover:border-gold transition duration-300 cursor-pointer group hover:scale-[1.02] shadow-xl">
+                    <div class="h-48 relative overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80" alt="Salón Económico" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 image-overlay"></div>
+                        <div class="absolute bottom-4 left-6">
+                            <span class="text-gold text-xs font-bold uppercase tracking-wider bg-navy/80 px-3 py-1 rounded-full border border-gold/30">Práctico y Cómodo</span>
+                        </div>
+                    </div>
+                    <div class="p-8 flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white mb-2">Salón Económico</h3>
+                            <ul class="space-y-3 text-sm text-gray-300 mb-8 mt-4">
+                                <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i> Capacidad recomendada: 100 personas</li>
+                                <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i> Montaje básico de mesas y sillería</li>
+                                <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i> Iluminación ambiental cálida</li>
+                                <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i> Coordinación directa durante la recepción</li>
+                            </ul>
+                        </div>
+                        <button class="w-full btn-gold font-bold py-3.5 rounded-xl text-center flex items-center justify-center text-sm shadow-md">
+                            <i class="fas fa-map-marked-alt mr-2"></i> Abrir Mapas Agua Prieta & Hermosillo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Salón Premium -->
+                <div onclick="abrirSedesMapas('Premium')" class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between border-2 border-gold relative transform md:-translate-y-2 hover:scale-[1.03] transition duration-300 cursor-pointer group shadow-2xl">
+                    <span class="absolute top-4 right-4 z-10 bg-gold text-navy text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg">Más Solicitado</span>
+                    <div class="h-48 relative overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=800&q=80" alt="Salón Premium" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 image-overlay"></div>
+                        <div class="absolute bottom-4 left-6">
+                            <span class="text-gold text-xs font-bold uppercase tracking-wider bg-navy/80 px-3 py-1 rounded-full border border-gold/30">Sofisticación y Atmósfera</span>
+                        </div>
+                    </div>
+                    <div class="p-8 flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white mb-2">Salón Premium</h3>
+                            <ul class="space-y-3 text-sm text-gray-300 mb-8 mt-4">
+                                <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i> Capacidad ampliada: hasta 250 personas</li>
+                                <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i> Mobiliario de lujo y mantelería fina</li>
+                                <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i> Centros de mesa con detalles metálicos oro</li>
+                                <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i> Iluminación robótica y sonido profesional</li>
+                            </ul>
+                        </div>
+                        <button class="w-full btn-gold font-bold py-3.5 rounded-xl text-center flex items-center justify-center text-sm shadow-md">
+                            <i class="fas fa-map-marked-alt mr-2"></i> Abrir Mapas Agua Prieta & Hermosillo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Salón VIP -->
+                <div onclick="abrirSedesMapas('VIP')" class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between hover:border-gold transition duration-300 cursor-pointer group hover:scale-[1.02] shadow-xl">
+                    <div class="h-48 relative overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80" alt="Salón VIP Exclusivo" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute inset-0 image-overlay"></div>
+                        <div class="absolute bottom-4 left-6">
+                            <span class="text-gold text-xs font-bold uppercase tracking-wider bg-navy/80 px-3 py-1 rounded-full border border-gold/30">Experiencia de Autor</span>
+                        </div>
+                    </div>
+                    <div class="p-8 flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white mb-2">Salón VIP Exclusivo</h3>
+                            <ul class="space-y-3 text-sm text-gray-300 mb-8 mt-4">
+                                <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i> Zona Lounge VIP y distribución modular</li>
+                                <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i> Decoración personalizada con acentos dorados</li>
+                                <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i> Servicio de banquetes, mixología y bar</li>
+                                <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i> Atención personalizada y Valet Parking</li>
+                            </ul>
+                        </div>
+                        <button class="w-full btn-gold font-bold py-3.5 rounded-xl text-center flex items-center justify-center text-sm shadow-md">
+                            <i class="fas fa-map-marked-alt mr-2"></i> Abrir Mapas Agua Prieta & Hermosillo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Calculadora de Cantidades -->
+    <section id="calculadora" class="py-24 px-6 max-w-7xl mx-auto">
+        <div class="text-center mb-16">
+            <p class="text-gold uppercase tracking-widest text-xs font-bold mb-2">Planificación Automática</p>
+            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-3">Calculadora de Eventos</h2>
+            <p class="text-gray-300 max-w-2xl mx-auto text-sm">Ingresa el número total de invitados proyectado para obtener una estimación ideal de mobiliario e insumos.</p>
+            <div class="w-20 h-1 bg-gold mx-auto rounded-full mt-4"></div>
+        </div>
+
+        <div class="glass-card p-8 md:p-12 rounded-3xl border border-gold/30 shadow-2xl max-w-4xl mx-auto">
+            <div class="flex flex-col sm:flex-row items-center gap-6 mb-8 border-b border-gold/20 pb-8">
+                <div class="w-full sm:w-1/2">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Número Estimado de Invitados</label>
+                    <div class="relative">
+                        <i class="fas fa-users text-gold absolute left-4 top-4"></i>
+                        <input type="number" id="num-invitados" min="10" max="1000" value="100" oninput="calcularInsumos()" class="w-full bg-navy border border-gold/40 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:border-gold font-bold text-lg">
+                    </div>
+                </div>
+                <div class="w-full sm:w-1/2">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Distribución por Mesa</label>
+                    <select id="tipo-mesa" onchange="calcularInsumos()" class="w-full bg-navy border border-gold/40 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-gold">
+                        <option value="10">Mesas Redondas (10 personas)</option>
+                        <option value="8">Mesas Rectangulares (8 personas)</option>
+                        <option value="12">Mesas Imperial (12 personas)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                <div class="bg-navy-light/80 p-5 rounded-2xl border border-gold/20 shadow-inner">
+                    <i class="fas fa-chair text-gold text-2xl mb-2"></i>
+                    <p class="text-xs text-gray-400 uppercase font-semibold">Sillas</p>
+                    <p id="res-sillas" class="text-2xl font-extrabold gold-gradient mt-1">100</p>
+                </div>
+                <div class="bg-navy-light/80 p-5 rounded-2xl border border-gold/20 shadow-inner">
+                    <i class="fas fa-border-all text-gold text-2xl mb-2"></i>
+                    <p class="text-xs text-gray-400 uppercase font-semibold">Mesas</p>
+                    <p id="res-mesas" class="text-2xl font-extrabold gold-gradient mt-1">10</p>
+                </div>
+                <div class="bg-navy-light/80 p-5 rounded-2xl border border-gold/20 shadow-inner">
+                    <i class="fas fa-asterisk text-gold text-2xl mb-2"></i>
+                    <p class="text-xs text-gray-400 uppercase font-semibold">Centros de Mesa</p>
+                    <p id="res-centros" class="text-2xl font-extrabold gold-gradient mt-1">10</p>
+                </div>
+                <div class="bg-navy-light/80 p-5 rounded-2xl border border-gold/20 shadow-inner">
+                    <i class="fas fa-glass-cheers text-gold text-2xl mb-2"></i>
+                    <p class="text-xs text-gray-400 uppercase font-semibold">Cristalería / Loza</p>
+                    <p id="res-cristaleria" class="text-2xl font-extrabold gold-gradient mt-1">110 sets</p>
+                </div>
+            </div>
+            <p class="text-xs text-gray-400 text-center mt-6 italic">*Incluye un margen del 10% adicional de cristalería para imprevistos.</p>
+        </div>
+    </section>
+
+    <!-- Diseñador Interactivo de Moodboard -->
+    <section id="moodboard" class="py-24 px-6 bg-navy-light/60 border-y border-gold/20">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <p class="text-gold uppercase tracking-widest text-xs font-bold mb-2">Diseñador Interactivo</p>
+                <h2 class="text-3xl sm:text-4xl font-bold text-white mb-3">Crea tu Tablero de Inspiración (Moodboard)</h2>
+                <p class="text-gray-300 max-w-2xl mx-auto text-sm">Arrastra o toca los elementos decorativos para agregarlos directamente a tu lienzo de diseño.</p>
+                <div class="w-20 h-1 bg-gold mx-auto rounded-full mt-4"></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Paleta de Elementos -->
+                <div class="glass-card p-6 rounded-2xl border border-gold/30">
+                    <h3 class="text-lg font-bold text-white mb-4 border-b border-gold/20 pb-2 flex items-center">
+                        <i class="fas fa-hand-pointer text-gold mr-2"></i> Elementos Disponibles
+                    </h3>
+                    <p class="text-xs text-gray-400 mb-4">Haz clic/toca o arrastra los elementos:</p>
+                    <div class="grid grid-cols-2 gap-3 max-h-[420px] overflow-y-auto pr-1">
+                        <div onclick="agregarElementoDirecto('Arco Floral Dorado', 'fa-archway')" draggable="true" ondragstart="drag(event)" id="elem-1" class="draggable-item p-3 bg-navy rounded-xl border border-gold/20 hover:border-gold transition text-center text-xs">
+                            <i class="fas fa-archway text-gold text-2xl mb-2 block"></i>
+                            <span>Arco Floral Dorado</span>
+                        </div>
+                        <div onclick="agregarElementoDirecto('Guirnalda Cálida', 'fa-lightbulb')" draggable="true" ondragstart="drag(event)" id="elem-2" class="draggable-item p-3 bg-navy rounded-xl border border-gold/20 hover:border-gold transition text-center text-xs">
+                            <i class="fas fa-lightbulb text-gold text-2xl mb-2 block"></i>
+                            <span>Guirnalda Cálida</span>
+                        </div>
+                        <div onclick="agregarElementoDirecto('Copa Cristal Tallado', 'fa-wine-glass')" draggable="true" ondragstart="drag(event)" id="elem-3" class="draggable-item p-3 bg-navy rounded-xl border border-gold/20 hover:border-gold transition text-center text-xs">
+                            <i class="fas fa-wine-glass text-gold text-2xl mb-2 block"></i>
+                            <span>Copa Cristal Tallado</span>
+                        </div>
+                        <div onclick="agregarElementoDirecto('Sillón Lounge VIP', 'fa-couch')" draggable="true" ondragstart="drag(event)" id="elem-4" class="draggable-item p-3 bg-navy rounded-xl border border-gold/20 hover:border-gold transition text-center text-xs">
+                            <i class="fas fa-couch text-gold text-2xl mb-2 block"></i>
+                            <span>Sillón Lounge VIP</span>
+                        </div>
+                        <div onclick="agregarElementoDirecto('Centros Metálicos', 'fa-fan')" draggable="true" ondragstart="drag(event)" id="elem-5" class="draggable-item p-3 bg-navy rounded-xl border border-gold/20 hover:border-gold transition text-center text-xs">
+                            <i class="fas fa-fan text-gold text-2xl mb-2 block"></i>
+                            <span>Centros Metálicos</span>
+                        </div>
+                        <div onclick="agregarElementoDirecto('Mantelería Fina Azul', 'fa-ribbon')" draggable="true" ondragstart="drag(event)" id="elem-6" class="draggable-item p-3 bg-navy rounded-xl border border-gold/20 hover:border-gold transition text-center text-xs">
+                            <i class="fas fa-ribbon text-gold text-2xl mb-2 block"></i>
+                            <span>Mantelería Fina Azul</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lienzo Interactivo -->
+                <div class="lg:col-span-2 glass-card p-6 rounded-2xl border-2 border-gold/40 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4 border-b border-gold/20 pb-2">
+                            <h3 class="text-lg font-bold text-white flex items-center">
+                                <i class="fas fa-palette text-gold mr-2"></i> Mi Tablero de Evento
+                            </h3>
+                            <button onclick="limpiarLienzo()" class="text-xs border border-gold/40 hover:bg-gold/20 text-gold px-3 py-1 rounded-lg transition">
+                                <i class="fas fa-trash-alt mr-1"></i> Limpiar Lienzo
+                            </button>
+                        </div>
+                        <div id="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)" class="dropzone rounded-xl border-2 border-dashed border-gold/30 p-6 flex flex-wrap gap-4 items-start content-start relative">
+                            <p id="placeholder-text" class="text-gray-500 text-sm text-center w-full my-auto pointer-events-none">
+                                <i class="fas fa-cloud-upload-alt text-3xl text-gold/40 block mb-2"></i>
+                                Arrastra o toca elementos aquí para personalizar el concepto de tu boda o fiesta
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gold/20 flex flex-col sm:flex-row justify-between items-center gap-3">
+                        <p class="text-xs text-gray-400">¿Satisfecho con tu concepto? Puedes coordinarlo directamente en tu consulta.</p>
+                        <a href="#contacto" class="btn-gold font-bold px-6 py-2 rounded-xl text-xs shadow-md">Usar este Moodboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Proceso de Trabajo -->
+    <section id="proceso" class="py-24 px-6 bg-navy-light/40">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <p class="text-gold uppercase tracking-widest text-xs font-bold mb-2">Metodología Impecable</p>
+                <h2 class="text-3xl sm:text-4xl font-bold text-white mb-3">¿Cómo Trabajamos?</h2>
+                <div class="w-20 h-1 bg-gold mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="glass-card p-6 rounded-2xl text-center relative shadow-xl">
+                    <div class="w-12 h-12 rounded-full bg-gold text-navy font-bold flex items-center justify-center mx-auto mb-4 text-lg shadow-md">1</div>
+                    <h3 class="text-white font-bold text-lg mb-2">Consulta Inicial</h3>
+                    <p class="text-gray-400 text-xs leading-relaxed">Escuchamos tus ideas, necesidades, presupuesto y concepto general de la fiesta.</p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl text-center relative shadow-xl">
+                    <div class="w-12 h-12 rounded-full bg-gold text-navy font-bold flex items-center justify-center mx-auto mb-4 text-lg shadow-md">2</div>
+                    <h3 class="text-white font-bold text-lg mb-2">Propuesta & Diseño</h3>
+                    <p class="text-gray-400 text-xs leading-relaxed">Presentamos el plan visual, paleta de colores y catálogo de salones disponibles.</p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl text-center relative shadow-xl">
+                    <div class="w-12 h-12 rounded-full bg-gold text-navy font-bold flex items-center justify-center mx-auto mb-4 text-lg shadow-md">3</div>
+                    <h3 class="text-white font-bold text-lg mb-2">Coordinación</h3>
+                    <p class="text-gray-400 text-xs leading-relaxed">Aseguramos la logística, tiempos de montaje y coordinación detallada.</p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl text-center relative shadow-xl">
+                    <div class="w-12 h-12 rounded-full bg-gold text-navy font-bold flex items-center justify-center mx-auto mb-4 text-lg shadow-md">4</div>
+                    <h3 class="text-white font-bold text-lg mb-2">Ejecución Impecable</h3>
+                    <p class="text-gray-400 text-xs leading-relaxed">Llevamos a cabo el evento sin imprevistos para que tú solo te dediques a disfrutar.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Galería con Imágenes -->
+    <section id="galeria" class="py-24 px-6 max-w-7xl mx-auto">
+        <div class="text-center mb-16">
+            <p class="text-gold uppercase tracking-widest text-xs font-bold mb-2">Inspiración Real</p>
+            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-3">Ambientes y Celebraciones Inolvidables</h2>
+            <p class="text-gray-300 max-w-xl mx-auto text-sm">Explora nuestra variedad de decoraciones y montajes diseñados especialmente para cada ocasión especial.</p>
+            <div class="w-20 h-1 bg-gold mx-auto rounded-full mt-4"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="h-80 rounded-2xl overflow-hidden relative group shadow-xl border border-gold/30">
+                <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80" alt="Decoración Quinceañeras" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                <div class="absolute inset-0 image-overlay flex flex-col justify-end p-6 text-center">
+                    <span class="text-gold text-xs font-semibold uppercase tracking-wider mb-1">XV Años</span>
+                    <p class="font-bold text-white text-lg">Quinceañeras Mágicas</p>
+                    <p class="text-xs text-gray-300 mt-1">Vestimentas, luces y detalles de ensueño</p>
+                </div>
+            </div>
+
+            <div class="h-80 rounded-2xl overflow-hidden relative group shadow-xl border border-gold/30">
+                <img src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80" alt="Decoración Bodas" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                <div class="absolute inset-0 image-overlay flex flex-col justify-end p-6 text-center">
+                    <span class="text-gold text-xs font-semibold uppercase tracking-wider mb-1">Bodas de Lujo</span>
+                    <p class="font-bold text-white text-lg">Enlaces Exclusivos</p>
+                    <p class="text-xs text-gray-300 mt-1">Arreglos florales y elegancia absoluta</p>
+                </div>
+            </div>
+
+            <div class="h-80 rounded-2xl overflow-hidden relative group shadow-xl border border-gold/30">
+                <img src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=800&q=80" alt="Decoración Cumpleaños" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                <div class="absolute inset-0 image-overlay flex flex-col justify-end p-6 text-center">
+                    <span class="text-gold text-xs font-semibold uppercase tracking-wider mb-1">Fiestas y Aniversarios</span>
+                    <p class="font-bold text-white text-lg">Cumpleaños Únicos</p>
+                    <p class="text-xs text-gray-300 mt-1">Ambientes divertidos y personalizados</p>
+                </div>
+            </div>
+
+            <div class="h-80 rounded-2xl overflow-hidden relative group shadow-xl border border-gold/30">
+                <img src="https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=800&q=80" alt="Decoración Baby Showers" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                <div class="absolute inset-0 image-overlay flex flex-col justify-end p-6 text-center">
+                    <span class="text-gold text-xs font-semibold uppercase tracking-wider mb-1">Bienvenido Bebé</span>
+                    <p class="font-bold text-white text-lg">Baby Showers Tiernos</p>
+                    <p class="text-xs text-gray-300 mt-1">Diseños delicados y acogedores</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonios -->
+    <section id="testimonios" class="py-24 px-6 bg-navy-light/40">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <p class="text-gold uppercase tracking-widest text-xs font-bold mb-2">Opiniones de Nuestros Clientes</p>
+                <h2 class="text-3xl sm:text-4xl font-bold text-white mb-3">Lo Que Dicen de YupiFest's</h2>
+                <div class="w-20 h-1 bg-gold mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="glass-card p-8 rounded-2xl relative shadow-xl">
+                    <div class="flex text-gold text-xs mb-3">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-gray-300 text-sm italic mb-6 leading-relaxed">"La decoración para los XV años de mi hija en Hermosillo superó nuestras expectativas. El acabado dorado lució sumamente elegante."</p>
+                    <p class="text-white font-bold text-sm">— María Elena G.</p>
+                </div>
+                <div class="glass-card p-8 rounded-2xl relative shadow-xl">
+                    <div class="flex text-gold text-xs mb-3">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-gray-300 text-sm italic mb-6 leading-relaxed">"Organizamos nuestra gala anual corporativa con YupiFest's y la puntualidad junto con la transparencia en presupuesto fueron impecables."</p>
+                    <p class="text-white font-bold text-sm">— Roberto V.</p>
+                </div>
+                <div class="glass-card p-8 rounded-2xl relative shadow-xl">
+                    <div class="flex text-gold text-xs mb-3">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-gray-300 text-sm italic mb-6 leading-relaxed">"La atención en Agua Prieta para nuestra boda VIP fue increíble. No tuvimos de qué preocuparnos, todo estuvo listo a tiempo."</p>
+                    <p class="text-white font-bold text-sm">— Sofía & Carlos</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Preguntas Frecuentes (FAQ) -->
+    <section id="faq" class="py-24 px-6 max-w-4xl mx-auto">
+        <div class="text-center mb-16">
+            <p class="text-gold uppercase tracking-widest text-xs font-bold mb-2">Resolvemos tus Dudas</p>
+            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-3">Preguntas Frecuentes</h2>
+            <div class="w-20 h-1 bg-gold mx-auto rounded-full"></div>
+        </div>
+
+        <div class="space-y-4">
+            <div class="glass-card rounded-xl p-6 border border-gold/20 shadow-lg">
+                <button onclick="toggleFAQ(1)" class="w-full flex justify-between items-center text-left font-bold text-white text-lg">
+                    <span>¿Con cuánta anticipación debo reservar mi fecha?</span>
+                    <i id="icon-1" class="fas fa-chevron-down text-gold"></i>
+                </button>
+                <div id="faq-1" class="accordion-content mt-3 text-sm text-gray-300 leading-relaxed">
+                    Recomendamos agendar con un mínimo de 2 a 6 meses de anticipación, especialmente para bodas, graduaciones y eventos en temporadas altas.
+                </div>
+            </div>
+
+            <div class="glass-card rounded-xl p-6 border border-gold/20 shadow-lg">
+                <button onclick="toggleFAQ(2)" class="w-full flex justify-between items-center text-left font-bold text-white text-lg">
+                    <span>¿Cubren eventos fuera de Agua Prieta y Hermosillo?</span>
+                    <i id="icon-2" class="fas fa-chevron-down text-gold"></i>
+                </button>
+                <div id="faq-2" class="accordion-content mt-3 text-sm text-gray-300 leading-relaxed">
+                    Sí, atendemos solicitudes en municipios aledaños del estado de Sonora previa cotización logística.
+                </div>
+            </div>
+
+            <div class="glass-card rounded-xl p-6 border border-gold/20 shadow-lg">
+                <button onclick="toggleFAQ(3)" class="w-full flex justify-between items-center text-left font-bold text-white text-lg">
+                    <span>¿Ofrecen paquetes personalizados?</span>
+                    <i id="icon-3" class="fas fa-chevron-down text-gold"></i>
+                </button>
+                <div id="faq-3" class="accordion-content mt-3 text-sm text-gray-300 leading-relaxed">
+                    Absolutamente. Podemos adaptar nuestros paquetes Económico, Premium y VIP a las exigencias específicas de tu fiesta.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Términos y Condiciones -->
+    <section id="terminos" class="py-24 px-6 max-w-4xl mx-auto border-t border-gold/20">
+        <div class="text-center mb-12">
+            <p class="text-gold uppercase tracking-widest text-xs font-bold mb-2">Aspectos Legales y Reservas</p>
+            <h2 class="text-3xl font-bold text-white mb-3">Términos y Condiciones</h2>
+            <div class="w-20 h-1 bg-gold mx-auto rounded-full"></div>
+        </div>
+
+        <div class="glass-card p-8 rounded-2xl border border-gold/20 text-xs md:text-sm text-gray-300 space-y-4 max-h-80 overflow-y-auto leading-relaxed shadow-lg">
+            <h3 class="text-white font-bold text-base">1. Reservaciones y Anticipos</h3>
+            <p>Para asegurar la fecha de su evento en las sedes de Agua Prieta o Hermosillo, se requiere el anticipo estipulado en la cotización inicial. Ninguna fecha se considera reservada sin el comprobante correspondiente.</p>
+            
+            <h3 class="text-white font-bold text-base">2. Políticas de Cancelación</h3>
+            <p>Las cancelaciones realizadas con más de 30 días de anticipación estarán sujetas a una cuota administrativa. En cancelaciones con menos de 15 días previos al evento, el anticipo no será reembolsable debido a la reserva exclusiva de insumos.</p>
+
+            <h3 class="text-white font-bold text-base">3. Cuidado del Mobiliario</h3>
+            <p>El cliente se hace responsable por cualquier daño severo, pérdida o rotura imputable a los asistentes sobre la mantelería, mobiliario VIP, cristalería y decoración proporcionada durante la celebración.</p>
+        </div>
+    </section>
+
+    <!-- Formulario de Contacto -->
+    <section id="contacto" class="py-24 px-6 max-w-4xl mx-auto">
+        <div class="glass-card p-8 md:p-12 rounded-3xl border border-gold/30 shadow-2xl">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-white mb-2">Planea tu Evento</h2>
+                <p class="text-gray-300 text-sm">Déjanos tus datos y nos pondremos en contacto para diseñar la fiesta de tus sueños.</p>
+            </div>
+            <form onsubmit="procesarFormularioContacto(event)" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Nombre Completo</label>
+                        <input type="text" id="contact-nombre" required placeholder="Tu nombre" class="w-full bg-navy border border-gold/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-gold">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Teléfono / WhatsApp</label>
+                        <input type="tel" required placeholder="Tu teléfono" class="w-full bg-navy border border-gold/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-gold">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Sede de Interés</label>
+                        <select id="contact-sede" class="w-full bg-navy border border-gold/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-gold">
+                            <option>Agua Prieta, Sonora</option>
+                            <option>Hermosillo, Sonora</option>
+                            <option>Otra ubicación</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Tipo de Evento</label>
+                        <select class="w-full bg-navy border border-gold/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-gold">
+                            <option>Boda / Aniversario</option>
+                            <option>XV Años / Cumpleaños</option>
+                            <option>Evento Corporativo</option>
+                            <option>Baby Shower / Otro</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Detalles Adicionales del Evento</label>
+                    <textarea rows="4" placeholder="Fecha estimada, número aproximado de invitados y requerimientos especiales..." class="w-full bg-navy border border-gold/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-gold"></textarea>
+                </div>
+                <button type="submit" class="w-full btn-gold font-bold py-3.5 rounded-lg text-lg shadow-lg">
+                    Enviar Consulta
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-gold/20 py-12 bg-navy-light text-center text-gray-400 text-sm">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 text-left">
+            <div>
+                <p class="gold-gradient text-xl font-bold mb-2">YupiFest's</p>
+                <p class="italic text-gray-300 text-xs mb-3">"Hacemos de tus fiestas momentos inolvidables"</p>
+                <p class="text-xs text-gray-400">Especialistas en decoración elegante y coordinación integral para eventos sociales y ejecutivos.</p>
+            </div>
+            <div>
+                <h3 class="text-white font-bold mb-3 border-b border-gold/30 pb-1">Ubicaciones principales</h3>
+                <p class="text-xs mb-2"><i class="fas fa-map-marker-alt text-gold mr-2"></i> Agua Prieta, Sonora, México</p>
+                <p class="text-xs mb-2"><i class="fas fa-map-marker-alt text-gold mr-2"></i> Hermosillo, Sonora, México</p>
+                <p class="text-xs"><a href="#terminos" class="text-gold hover:underline"><i class="fas fa-file-contract mr-2"></i>Términos y Condiciones</a></p>
+            </div>
+            <div>
+                <h3 class="text-white font-bold mb-3 border-b border-gold/30 pb-1">Contacto & Redes Sociales</h3>
+                <p class="text-xs mb-2"><i class="fas fa-envelope text-gold mr-2"></i> contacto@yupifests.com</p>
+                <p class="text-xs mb-3"><i class="fas fa-phone text-gold mr-2"></i> +52 (633) 000-0000</p>
+                <p class="text-xs text-gold font-semibold mb-2">Síguenos como @Yupi_fest95</p>
+                <div class="flex space-x-4 mt-2">
+                    <a href="https://www.facebook.com/share/19cVz3yqgR/?mibextid=wwXIfr" target="_blank" title="Facebook @Yupi_fest95" class="w-9 h-9 rounded-full bg-navy flex items-center justify-center border border-gold/50 text-gold hover:bg-gold hover:text-navy transition shadow">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://www.instagram.com/yupi_fest95?stkn=MWEzc2YyeTFlNHI4OA%3D%3D&utm_source=qr" target="_blank" title="Instagram @Yupi_fest95" class="w-9 h-9 rounded-full bg-navy flex items-center justify-center border border-gold/50 text-gold hover:bg-gold hover:text-navy transition shadow">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://www.tiktok.com/@yupi_fest5?_r=1&_t=ZS-99vvikSQmJB" target="_blank" title="TikTok @Yupi_fest95" class="w-9 h-9 rounded-full bg-navy flex items-center justify-center border border-gold/50 text-gold hover:bg-gold hover:text-navy transition shadow">
+                        <i class="fab fa-tiktok"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="border-t border-gold/10 pt-6">
+            <p>&copy; 2026 YupiFest's. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts de la Aplicación -->
+    <script>
+        let currentAuthMode = 'login';
+
+        // Verificar sesión activa al cargar la página desde Node.js
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/session');
+                const data = await res.json();
+                if (data.loggedin) {
+                    actualizarNavUsuario(data.nombre);
+                } else {
+                    actualizarNavUsuario(null);
+                    abrirAuthModal('login');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        function mostrarNotificacionToast(mensaje) {
+            let toast = document.createElement('div');
+            toast.className = 'fixed bottom-5 right-5 z-[200] bg-gold text-navy font-bold px-6 py-3 rounded-2xl shadow-2xl transition-all duration-300 flex items-center space-x-2 text-sm';
+            toast.innerHTML = `<i class="fas fa-bell"></i> <span>${mensaje}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function abrirAuthModal(modo = 'login') {
+            document.getElementById('modal-auth').classList.remove('hidden');
+            switchAuthTab(modo);
+        }
+
+        function cerrarAuthModal() {
+            document.getElementById('modal-auth').classList.add('hidden');
+            ocultarMensajeAuth();
+        }
+
+        function switchAuthTab(modo) {
+            currentAuthMode = modo;
+            const tabLogin = document.getElementById('tab-login');
+            const tabReg = document.getElementById('tab-register');
+            const formLogin = document.getElementById('form-login');
+            const formReg = document.getElementById('form-register');
+            const title = document.getElementById('auth-title');
+            const subtitle = document.getElementById('auth-subtitle');
+
+            ocultarMensajeAuth();
+
+            if (modo === 'login') {
+                tabLogin.className = "w-1/2 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition bg-gold text-navy shadow";
+                tabReg.className = "w-1/2 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition text-gray-400 hover:text-gold";
+                formLogin.classList.remove('hidden');
+                formReg.classList.add('hidden');
+                title.innerText = "Iniciar Sesión";
+                subtitle.innerText = "Ingresa con tus credenciales de cliente YupiFest's";
+            } else {
+                tabReg.className = "w-1/2 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition bg-gold text-navy shadow";
+                tabLogin.className = "w-1/2 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition text-gray-400 hover:text-gold";
+                formReg.classList.remove('hidden');
+                formLogin.classList.add('hidden');
+                title.innerText = "Crear Cuenta";
+                subtitle.innerText = "Registra tus datos para coordinar tus eventos";
+            }
+        }
+
+        function mostrarMensajeAuth(texto, esError = false) {
+            const msgBox = document.getElementById('auth-msg');
+            msgBox.innerText = texto;
+            msgBox.classList.remove('hidden', 'bg-red-900/80', 'text-red-200', 'bg-emerald-900/80', 'text-emerald-200');
+            if (esError) {
+                msgBox.classList.add('bg-red-900/80', 'text-red-200');
+            } else {
+                msgBox.classList.add('bg-emerald-900/80', 'text-emerald-200');
+            }
+        }
+
+        function ocultarMensajeAuth() {
+            document.getElementById('auth-msg').classList.add('hidden');
+        }
+
+        // Registro conectado a Node.js + MySQL (XAMPP)
+        async function procesarRegistro(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('reg-nombre').value.trim();
+            const email = document.getElementById('reg-email').value.trim().toLowerCase();
+            const password = document.getElementById('reg-password').value;
+            const confirm = document.getElementById('reg-confirm').value;
+
+            if (password !== confirm) {
+                mostrarMensajeAuth("Las contraseñas no coinciden", true);
+                return;
+            }
+
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, email, password })
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                mostrarMensajeAuth(data.message, true);
+                return;
+            }
+
+            mostrarMensajeAuth("¡Cuenta creada con éxito en MySQL!");
+            actualizarNavUsuario(data.nombre);
+            setTimeout(() => cerrarAuthModal(), 1200);
+        }
+
+        // Inicio de sesión conectado a Node.js + MySQL (XAMPP)
+        async function procesarLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim().toLowerCase();
+            const password = document.getElementById('login-password').value;
+
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                mostrarMensajeAuth(data.message, true);
+                return;
+            }
+
+            mostrarMensajeAuth(`¡Bienvenido de nuevo, ${data.nombre}!`);
+            actualizarNavUsuario(data.nombre);
+            setTimeout(() => cerrarAuthModal(), 1000);
+
+            if (!localStorage.getItem('yupi_discount_claimed')) {
+                setTimeout(() => {
+                    document.getElementById('popup-descuento').classList.remove('hidden');
+                }, 60000);
+            }
+        }
+
+        async function cerrarSesion() {
+            await fetch('/logout', { method: 'POST' });
+            actualizarNavUsuario(null);
+            mostrarNotificacionToast("Has cerrado sesión.");
+        }
+
+        function actualizarNavUsuario(nombreUsuario) {
+            const navArea = document.getElementById('nav-user-area');
+
+            if (nombreUsuario) {
+                navArea.innerHTML = `
+                    <div class="flex items-center space-x-3 bg-navy-light/90 border border-gold/40 rounded-full px-3 py-1.5 shadow-lg">
+                        <div class="w-7 h-7 rounded-full bg-gold text-navy font-bold flex items-center justify-center text-xs">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span class="text-xs font-bold text-white max-w-[120px] truncate">${nombreUsuario}</span>
+                        <button onclick="cerrarSesion()" title="Cerrar Sesión" class="text-red-400 hover:text-red-300 text-xs px-1">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                navArea.innerHTML = `
+                    <button onclick="abrirAuthModal('login')" class="btn-gold font-bold px-4 py-2 rounded-full text-xs sm:text-sm shadow-lg tracking-wide flex items-center space-x-2">
+                        <i class="fas fa-user-circle text-base"></i>
+                        <span>Iniciar Sesión / Registro</span>
+                    </button>
+                `;
+            }
+        }
+
+        function toggleFAQ(num) {
+            const content = document.getElementById(`faq-${num}`);
+            const icon = document.getElementById(`icon-${num}`);
+           
+            if (content.classList.contains('active')) {
+                content.classList.remove('active');
+                icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+            } else {
+                content.classList.add('active');
+                icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+            }
+        }
+
+        function cerrarPopup() {
+            document.getElementById('popup-descuento').classList.add('hidden');
+        }
+
+        function procesarDescuento(e) {
+            e.preventDefault();
+            const email = document.getElementById('email-descuento').value;
+            if (email) {
+                mostrarNotificacionToast(`🎉 ¡Cupón de 10% enviado a: ${email}!`);
+                localStorage.setItem('yupi_discount_claimed', 'true');
+                cerrarPopup();
+            }
+        }
+
+        function procesarFormularioContacto(e) {
+            e.preventDefault();
+            mostrarNotificacionToast("¡Gracias! Nos pondremos en contacto pronto.");
+            e.target.reset();
+        }
+
+        function calcularInsumos() {
+            const invitados = parseInt(document.getElementById('num-invitados').value) || 0;
+            const porMesa = parseInt(document.getElementById('tipo-mesa').value) || 10;
+
+            const mesas = Math.ceil(invitados / porMesa);
+            const centros = mesas;
+            const cristaleria = Math.ceil(invitados * 1.10);
+
+            document.getElementById('res-sillas').innerText = invitados;
+            document.getElementById('res-mesas').innerText = mesas;
+            document.getElementById('res-centros').innerText = centros;
+            document.getElementById('res-cristaleria').innerText = `${cristaleria} sets`;
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const originalNode = document.getElementById(data);
+            if (originalNode) {
+                const clone = originalNode.cloneNode(true);
+                clone.id = "cloned-" + Date.now();
+                clone.removeAttribute("draggable");
+                clone.removeAttribute("onclick");
+                clone.classList.add("relative", "group");
+                
+                const removeBtn = document.createElement("button");
+                removeBtn.innerHTML = "<i class='fas fa-times-circle text-red-400'></i>";
+                removeBtn.className = "absolute -top-2 -right-2 bg-navy rounded-full p-1 text-xs shadow";
+                removeBtn.onclick = function() { clone.remove(); checkPlaceholder(); };
+                
+                clone.appendChild(removeBtn);
+                
+                const dropzone = document.getElementById("dropzone");
+                dropzone.appendChild(clone);
+                checkPlaceholder();
+            }
+        }
+
+        function agregarElementoDirecto(nombre, icono) {
+            const dropzone = document.getElementById("dropzone");
+            const div = document.createElement("div");
+            div.className = "draggable-item p-3 bg-navy rounded-xl border border-gold/20 hover:border-gold transition text-center text-xs relative group";
+            div.innerHTML = `
+                <i class="fas ${icono} text-gold text-2xl mb-2 block"></i>
+                <span>${nombre}</span>
+                <button onclick="this.parentElement.remove(); checkPlaceholder();" class="absolute -top-2 -right-2 bg-navy rounded-full p-1 text-xs shadow text-red-400">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+            `;
+            dropzone.appendChild(div);
+            checkPlaceholder();
+        }
+
+        function checkPlaceholder() {
+            const dropzone = document.getElementById("dropzone");
+            const placeholder = document.getElementById("placeholder-text");
+            const items = dropzone.querySelectorAll('.draggable-item');
+            if (items.length > 0) {
+                placeholder.classList.add('hidden');
+            } else {
+                placeholder.classList.remove('hidden');
+            }
+        }
+
+        function limpiarLienzo() {
+            const dropzone = document.getElementById("dropzone");
+            const items = dropzone.querySelectorAll('.draggable-item');
+            items.forEach(item => item.remove());
+            checkPlaceholder();
+        }
+
+        function abrirSedesMapas(categoria) {
+            const mapaVentana = window.open("", "_blank");
+            mapaVentana.document.write(`
+                <!DOCTYPE html>
+                <html lang="es">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Ubicaciones Salón ${categoria} | YupiFest's</title>
+                    <script src="https://cdn.tailwindcss.com"><\/script>
+                    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+                    <style>
+                        .bg-navy { background-color: #050C1A; }
+                        .text-gold { color: #C5A059; }
+                        .border-gold { border-color: #C5A059; }
+                        .gold-gradient {
+                            background: linear-gradient(135deg, #9A7432 0%, #C5A059 25%, #FDF0A6 50%, #C5A059 75%, #8A6321 100%);
+                            -webkit-background-clip: text;
+                            -webkit-text-fill-color: transparent;
+                        }
+                        .glass-card {
+                            background: rgba(10, 22, 40, 0.85);
+                            backdrop-filter: blur(12px);
+                            border: 1px solid rgba(197, 160, 89, 0.25);
+                        }
+                    </style>
+                </head>
+                <body class="bg-navy text-gray-200 font-sans p-6 md:p-12">
+                    <div class="max-w-7xl mx-auto">
+                        <div class="text-center mb-10">
+                            <p class="text-gold tracking-widest uppercase text-xs font-bold mb-1">Sedes Disponibles</p>
+                            <h1 class="text-3xl md:text-5xl font-extrabold gold-gradient mb-3">Salón ${categoria}</h1>
+                            <p class="text-gray-300">Encuentra nuestras ubicaciones estratégicas en el estado de Sonora</p>
+                            <div class="w-24 h-1 bg-gold mx-auto rounded-full mt-4"></div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <!-- Mapa Agua Prieta -->
+                            <div class="glass-card p-6 rounded-3xl shadow-2xl flex flex-col justify-between">
+                                <div>
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h3 class="text-xl font-bold text-white flex items-center">
+                                            <i class="fas fa-map-marker-alt text-gold mr-2"></i> Agua Prieta, Sonora
+                                        </h3>
+                                        <span class="bg-gold/20 text-gold text-xs font-bold px-3 py-1 rounded-full">Sede Norte</span>
+                                    </div>
+                                    <p class="text-xs text-gray-300 mb-4">Ubicado en zona céntrica y accesible con estacionamiento amplio.</p>
+                                    <div class="w-full h-72 rounded-2xl overflow-hidden border border-gold/30 mb-4">
+                                        <iframe class="w-full h-full border-0" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27263.153920958133!2d-109.56616421946892!3d31.328795000000007!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x86d013f9c49efbfd%3A0x6b5c3bf4d8e72765!2sAgua%20Prieta%2C%20Son.!5e0!3m2!1ses!2smx!4v1710000000000!5m2!1ses!2smx" allowfullscreen="" loading="lazy"></iframe>
+                                    </div>
+                                </div>
+                                <a href="https://maps.google.com" target="_blank" class="w-full bg-gold/10 hover:bg-gold/20 border border-gold text-gold font-bold py-2.5 rounded-xl text-xs text-center block transition">Abrir en Google Maps</a>
+                            </div>
+
+                            <!-- Mapa Hermosillo -->
+                            <div class="glass-card p-6 rounded-3xl shadow-2xl flex flex-col justify-between">
+                                <div>
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h3 class="text-xl font-bold text-white flex items-center">
+                                            <i class="fas fa-map-marker-alt text-gold mr-2"></i> Hermosillo, Sonora
+                                        </h3>
+                                        <span class="bg-gold/20 text-gold text-xs font-bold px-3 py-1 rounded-full">Sede Capital</span>
+                                    </div>
+                                    <p class="text-xs text-gray-300 mb-4">Ubicado en corredor de eventos de alta exclusividad.</p>
+                                    <div class="w-full h-72 rounded-2xl overflow-hidden border border-gold/30 mb-4">
+                                        <iframe class="w-full h-full border-0" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d111520.45781326462!2d-111.02868172810842!3d29.089228801861213!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x86ce844612340001%3A0x123456789abcdef!2sHermosillo%2C%20Son.!5e0!3m2!1ses!2smx!4v1710000000000!5m2!1ses!2smx" allowfullscreen="" loading="lazy"></iframe>
+                                    </div>
+                                </div>
+                                <a href="https://maps.google.com" target="_blank" class="w-full bg-gold/10 hover:bg-gold/20 border border-gold text-gold font-bold py-2.5 rounded-xl text-xs text-center block transition">Abrir en Google Maps</a>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 text-center">
+                            <button onclick="window.close()" class="bg-gold text-navy font-bold px-8 py-3 rounded-xl text-sm hover:opacity-90 transition shadow-lg">
+                                Cerrar Ventana de Mapas
+                            </button>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `);
+        }
+    </script>
+</body>
+</html>
