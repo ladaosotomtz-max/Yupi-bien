@@ -892,10 +892,23 @@
     <script>
         let currentAuthMode = 'login';
 
+        // Usa ruta relativa en localhost/ngrok y apunta al túnel de ngrok cuando se abre desde GitHub Pages
+        const API_URL = (window.location.hostname === 'localhost' || window.location.hostname.includes('ngrok'))
+            ? ''
+            : 'https://unhelpful-drainable-glowworm.ngrok-free.dev';
+
+        const apiHeaders = {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
+        };
+
         // Verificar sesión activa al cargar la página desde Node.js
         window.addEventListener('DOMContentLoaded', async () => {
             try {
-                const res = await fetch('/session');
+                const res = await fetch(`${API_URL}/session`, {
+                    credentials: 'include',
+                    headers: { 'ngrok-skip-browser-warning': 'true' }
+                });
                 const data = await res.json();
                 if (data.loggedin) {
                     actualizarNavUsuario(data.nombre);
@@ -985,22 +998,28 @@
                 return;
             }
 
-            const response = await fetch('/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nombre, email, password })
-            });
+            try {
+                const response = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: apiHeaders,
+                    body: JSON.stringify({ nombre, email, password })
+                });
 
-            const data = await response.json();
+                const data = await response.json();
 
-            if (!data.success) {
-                mostrarMensajeAuth(data.message, true);
-                return;
+                if (!response.ok || !data.success) {
+                    mostrarMensajeAuth(data.message || "No se pudo completar el registro", true);
+                    return;
+                }
+
+                mostrarMensajeAuth("¡Cuenta creada con éxito en MySQL!");
+                actualizarNavUsuario(data.nombre);
+                setTimeout(() => cerrarAuthModal(), 1200);
+            } catch (err) {
+                console.error(err);
+                mostrarMensajeAuth("Error de conexión con el servidor", true);
             }
-
-            mostrarMensajeAuth("¡Cuenta creada con éxito en MySQL!");
-            actualizarNavUsuario(data.nombre);
-            setTimeout(() => cerrarAuthModal(), 1200);
         }
 
         // Inicio de sesión conectado a Node.js + MySQL (XAMPP)
@@ -1009,32 +1028,42 @@
             const email = document.getElementById('login-email').value.trim().toLowerCase();
             const password = document.getElementById('login-password').value;
 
-            const response = await fetch('/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: apiHeaders,
+                    body: JSON.stringify({ email, password })
+                });
 
-            const data = await response.json();
+                const data = await response.json();
 
-            if (!data.success) {
-                mostrarMensajeAuth(data.message, true);
-                return;
-            }
+                if (!response.ok || !data.success) {
+                    mostrarMensajeAuth(data.message || "Credenciales incorrectas", true);
+                    return;
+                }
 
-            mostrarMensajeAuth(`¡Bienvenido de nuevo, ${data.nombre}!`);
-            actualizarNavUsuario(data.nombre);
-            setTimeout(() => cerrarAuthModal(), 1000);
+                mostrarMensajeAuth(`¡Bienvenido de nuevo, ${data.nombre}!`);
+                actualizarNavUsuario(data.nombre);
+                setTimeout(() => cerrarAuthModal(), 1000);
 
-            if (!localStorage.getItem('yupi_discount_claimed')) {
-                setTimeout(() => {
-                    document.getElementById('popup-descuento').classList.remove('hidden');
-                }, 60000);
+                if (!localStorage.getItem('yupi_discount_claimed')) {
+                    setTimeout(() => {
+                        document.getElementById('popup-descuento').classList.remove('hidden');
+                    }, 60000);
+                }
+            } catch (err) {
+                console.error(err);
+                mostrarMensajeAuth("Error de conexión con el servidor", true);
             }
         }
 
         async function cerrarSesion() {
-            await fetch('/logout', { method: 'POST' });
+            await fetch(`${API_URL}/logout`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'ngrok-skip-browser-warning': 'true' }
+            });
             actualizarNavUsuario(null);
             mostrarNotificacionToast("Has cerrado sesión.");
         }
@@ -1067,7 +1096,7 @@
         function toggleFAQ(num) {
             const content = document.getElementById(`faq-${num}`);
             const icon = document.getElementById(`icon-${num}`);
-           
+
             if (content.classList.contains('active')) {
                 content.classList.remove('active');
                 icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
@@ -1129,14 +1158,14 @@
                 clone.removeAttribute("draggable");
                 clone.removeAttribute("onclick");
                 clone.classList.add("relative", "group");
-                
+
                 const removeBtn = document.createElement("button");
                 removeBtn.innerHTML = "<i class='fas fa-times-circle text-red-400'></i>";
                 removeBtn.className = "absolute -top-2 -right-2 bg-navy rounded-full p-1 text-xs shadow";
                 removeBtn.onclick = function() { clone.remove(); checkPlaceholder(); };
-                
+
                 clone.appendChild(removeBtn);
-                
+
                 const dropzone = document.getElementById("dropzone");
                 dropzone.appendChild(clone);
                 checkPlaceholder();
